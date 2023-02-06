@@ -116,7 +116,6 @@ export default {
       const moveWidth = canvas.width - 30
       ctx.fillStyle = "#7C46A320"
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-      console.log("aaa");
       let t = 0
       while (t<1){
         const y = this.returnYpos(t)
