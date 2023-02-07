@@ -25,7 +25,7 @@
         </button>
       </div>
       <svg
-        :width="inputSize" :height="inputSize" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" ref="mainView"
+        :width="inputSize" :height="inputSize" :viewBox="`${(100-svgSize)/2} ${(100-svgSize)/2} ${svgSize} ${svgSize}`" xmlns="http://www.w3.org/2000/svg" ref="mainView"
         @mousemove="movePoint"
         @mousedown="startMove"
         @mouseup="mouseDown = false"
@@ -68,6 +68,7 @@ export default {
   data(){return {
     cubicBezier: [0.4, 0.1, 0.4, 0.8],
     inputSize: 165,
+    svgSize: 140,
     mouseDown: false,
     aimStartPoint: true,
     buttonsBezier: [
@@ -100,7 +101,7 @@ export default {
       }
     },
     getMousePos(mousePos, elementPos){
-      return Math.round((mousePos - elementPos) / this.inputSize * 100) / 100
+      return Math.round(((mousePos - elementPos) - (((this.svgSize-100)/2) / this.inputSize * this.svgSize)) / this.inputSize * this.svgSize) / 100
     },
     startMove(e){
       this.mouseDown = true
