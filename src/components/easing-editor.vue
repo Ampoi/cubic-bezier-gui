@@ -31,19 +31,19 @@
         @mouseup="mouseDown = false"
         @mouseleave="mouseDown = false"
       >
-        <path :d="`M 0 100 L ${cubicBezier[0]*100} ${(1-cubicBezier[1])*100}`" stroke="#A994BE" stroke-width="1"/>
-        <path :d="`M 100 0 L ${cubicBezier[2]*100} ${(1-cubicBezier[3])*100}`" stroke="#A994BE" stroke-width="1"/>
+        <path :d="`M 0 100 L ${cubicBezier[0]*100} ${(1-cubicBezier[1])*100}`" stroke="#C587D1" stroke-width="1.5"/>
+        <path :d="`M 100 0 L ${cubicBezier[2]*100} ${(1-cubicBezier[3])*100}`" stroke="#C587D1" stroke-width="1.5"/>
         <path :d="`
           M 0 100
           C ${cubicBezier[0]*100} ${(1-cubicBezier[1])*100}
           ${cubicBezier[2]*100} ${(1-cubicBezier[3])*100}
           100 0
-        `" fill="none" stroke="black" stroke-width="1"/>
+        `" fill="none" stroke="black" stroke-width="2.5"/>
         <circle
-          :cx="cubicBezier[0]*100" :cy="(1-cubicBezier[1])*100" r="3" stroke="none" fill="#7B46A2"
+          :cx="cubicBezier[0]*100" :cy="(1-cubicBezier[1])*100" r="6" stroke="none" fill="#9C26B0"
         /> <!--始点の操作-->
         <circle
-          :cx="cubicBezier[2]*100" :cy="(1-cubicBezier[3])*100" r="3" stroke="none" fill="#7B46A2"
+          :cx="cubicBezier[2]*100" :cy="(1-cubicBezier[3])*100" r="6" stroke="none" fill="#9C26B0"
         /> <!--終点の操作-->
       </svg>
     </div>
@@ -197,7 +197,7 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  box-shadow: 0 10px 25px 0 rgba(0, 0, 0, .5);
+  box-shadow: 0 1px 4px 0.5px rgba(0, 0, 0, .2);
   width: 280.5px;
   padding: 15px;
   border-radius: 6px;
