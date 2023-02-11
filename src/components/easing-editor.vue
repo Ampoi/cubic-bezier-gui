@@ -6,7 +6,7 @@
     </div>
     <div id="cubicEditor">
       <div>
-        <button v-for="buttonBezier in buttonsBezier" :key="buttonBezier.key" @click="cubicBezier = buttonBezier.concat()">
+        <button v-for="buttonBezier in buttonsBezier" :key="buttonBezier.key" @click="useTemplate(buttonBezier)">
           <svg
             width="50" height="50" viewBox="-10 -10 120 120" xmlns="http://www.w3.org/2000/svg" class="buttonBezier"
           >
@@ -29,10 +29,7 @@
       </div>
       <svg
         :width="inputSize" :height="inputSize" :viewBox="`${(100-svgSize)/2} ${(100-svgSize)/2} ${svgSize} ${svgSize}`" xmlns="http://www.w3.org/2000/svg" ref="mainView"
-        @mousemove="movePoint"
         @mousedown="startMove"
-        @mouseup="endMove"
-        @mouseleave="endMove"
       >
         <path :d="`M 0 100 L ${cubicBezier[0]*100} ${(1-cubicBezier[1])*100}`" stroke="#C587D1" stroke-width="1.5"/>
         <path :d="`M 100 0 L ${cubicBezier[2]*100} ${(1-cubicBezier[3])*100}`" stroke="#C587D1" stroke-width="1.5"/>
@@ -50,18 +47,7 @@
         /> <!--終点の操作-->
       </svg>
     </div>
-    <p id="cubicInputs">
-      cubic-bezier(<span
-        v-for="(value, index) in cubicBezier"
-        :key="index"
-        id="cubicInput"
-      >
-        <input
-          type="number"
-          v-model="cubicBezier[index]"
-        ><span>,</span>
-      </span>)
-    </p>
+    <p id="cubicOutput">{{modelValue}}</p>
   </div>
 </template>
 <script>
@@ -79,8 +65,7 @@ export default {
       [0.4, 0, 1, 1],
       [0, 0, 0.6, 1]
     ],
-    runDemoAnime: false,
-    changed: false
+    runDemoAnime: false
   }},
   mounted(){
     let newCubicBezier = this.modelValue.replace("cubic-bezier(", "").replace(")", "").split(", ")
@@ -90,6 +75,9 @@ export default {
       i++
     })
     this.cubicBezier = newCubicBezier
+
+    addEventListener("mousemove", this.movePoint)
+    addEventListener("mouseup", this.endMove)
   },
   methods:{
     movePoint(e){
@@ -123,7 +111,7 @@ export default {
       const startPointDistance = Math.sqrt((this.cubicBezier[0] - mouseLeft)**2 + (this.cubicBezier[1]- mouseTop)**2)
       const endPointDistance = Math.sqrt((this.cubicBezier[2] - mouseLeft)**2 + (this.cubicBezier[3]- mouseTop)**2)
       this.aimStartPoint = startPointDistance < endPointDistance
-      this.runDemoAnime = false
+      this.resetDemoAnime()
     },
 
     endMove(){
@@ -132,11 +120,17 @@ export default {
     },
 
     startDemoAnime(){
-      console.log("aaa");
-      if(this.changed){
-        this.runDemoAnime = true
-        this.changed = false
-      }
+      this.runDemoAnime = true
+    },
+
+    resetDemoAnime(){
+      this.runDemoAnime = false
+    },
+
+    useTemplate(buttonBezier){
+      this.cubicBezier = buttonBezier.concat()
+      this.resetDemoAnime()
+      setTimeout(this.startDemoAnime, 30)
     }
   },
   watch: {
@@ -152,31 +146,15 @@ export default {
         })
         newCubicBezier += ")"
         this.$emit("update:modelValue", newCubicBezier)
-        this.changed = true
       }
     }
   }
 }
 </script>
 <style scoped>
-#cubicInput input::-webkit-inner-spin-button,
-#cubicInput input::-webkit-outer-spin-button {
-  -webkit-appearance:none !important;
-  -moz-appearance:textfield !important;
-  margin: 0 !important;
-}
-
-#cubicInputs {
+#cubicOutput {
   font-size: 12px;
   text-align: center;
-}
-
-#cubicInput input {
-  width: 20px;
-}
-
-#cubicInput:last-child span {
-  display: none;
 }
 
 #mainDiv {
