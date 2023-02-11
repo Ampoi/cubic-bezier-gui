@@ -1,11 +1,14 @@
 <template>
   <div id="mainDiv">
-    <canvas width="250.5" height="20" ref="demoCanvas"/>
+    <div>
+      <canvas width="250.5" height="20" ref="demoCanvas"/>
+      <div id="demoAnimeBall" :class="{'runDemoAnime':runDemoAnime}"/>
+    </div>
     <div id="cubicEditor">
       <div>
         <button v-for="buttonBezier in buttonsBezier" :key="buttonBezier.key" @click="cubicBezier = buttonBezier.concat()">
           <svg
-            width="45" height="45" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="buttonBezier"
+            width="50" height="50" viewBox="-10 -10 120 120" xmlns="http://www.w3.org/2000/svg" class="buttonBezier"
           >
             <path :d="`M 0 100 L ${buttonBezier[0]*100} ${(1-buttonBezier[1])*100}`" stroke="#6B6B6B" stroke-width="3"/>
             <path :d="`M 100 0 L ${buttonBezier[2]*100} ${(1-buttonBezier[3])*100}`" stroke="#6B6B6B" stroke-width="4"/>
@@ -14,12 +17,12 @@
               C ${buttonBezier[0]*100} ${(1-buttonBezier[1])*100}
               ${buttonBezier[2]*100} ${(1-buttonBezier[3])*100}
               100 0
-            `" fill="none" stroke="black" stroke-width="4"/>
+            `" fill="none" stroke="black" stroke-width="7"/>
             <circle
-              :cx="buttonBezier[0]*100" :cy="(1-buttonBezier[1])*100" r="4" stroke="none" fill="#6B6B6B"
+              :cx="buttonBezier[0]*100" :cy="(1-buttonBezier[1])*100" r="7" stroke="none" fill="#6B6B6B"
             /> <!--始点の操作-->
             <circle
-              :cx="buttonBezier[2]*100" :cy="(1-buttonBezier[3])*100" r="4" stroke="none" fill="#6B6B6B"
+              :cx="buttonBezier[2]*100" :cy="(1-buttonBezier[3])*100" r="7" stroke="none" fill="#6B6B6B"
             />
           </svg>
         </button>
@@ -28,8 +31,8 @@
         :width="inputSize" :height="inputSize" :viewBox="`${(100-svgSize)/2} ${(100-svgSize)/2} ${svgSize} ${svgSize}`" xmlns="http://www.w3.org/2000/svg" ref="mainView"
         @mousemove="movePoint"
         @mousedown="startMove"
-        @mouseup="mouseDown = false"
-        @mouseleave="mouseDown = false"
+        @mouseup="endMove"
+        @mouseleave="endMove"
       >
         <path :d="`M 0 100 L ${cubicBezier[0]*100} ${(1-cubicBezier[1])*100}`" stroke="#C587D1" stroke-width="1.5"/>
         <path :d="`M 100 0 L ${cubicBezier[2]*100} ${(1-cubicBezier[3])*100}`" stroke="#C587D1" stroke-width="1.5"/>
@@ -47,7 +50,7 @@
         /> <!--終点の操作-->
       </svg>
     </div>
-    <p>
+    <p id="cubicInputs">
       cubic-bezier(<span
         v-for="(value, index) in cubicBezier"
         :key="index"
@@ -75,7 +78,9 @@ export default {
       [0.4, 0, 0.6, 1],
       [0.4, 0, 1, 1],
       [0, 0, 0.6, 1]
-    ]
+    ],
+    runDemoAnime: false,
+    changed: false
   }},
   mounted(){
     let newCubicBezier = this.modelValue.replace("cubic-bezier(", "").replace(")", "").split(", ")
@@ -90,12 +95,20 @@ export default {
     movePoint(e){
       if(this.mouseDown){
         const mouseLeft = this.getMousePos(e.clientX, this.$refs.mainView.getBoundingClientRect().left)
+        let newPointLeft
+        if(mouseLeft < 0){
+          newPointLeft = 0
+        }else if(1 < mouseLeft){
+          newPointLeft = 1
+        }else{
+          newPointLeft = mouseLeft
+        }
         const mouseTop = Math.round((1 - this.getMousePos(e.clientY, this.$refs.mainView.getBoundingClientRect().top)) * 100) / 100
         if(this.aimStartPoint){
-          this.cubicBezier[0] = mouseLeft
+          this.cubicBezier[0] = newPointLeft
           this.cubicBezier[1] = mouseTop
         }else{
-          this.cubicBezier[2] = mouseLeft
+          this.cubicBezier[2] = newPointLeft
           this.cubicBezier[3] = mouseTop
         }
       }
@@ -110,52 +123,20 @@ export default {
       const startPointDistance = Math.sqrt((this.cubicBezier[0] - mouseLeft)**2 + (this.cubicBezier[1]- mouseTop)**2)
       const endPointDistance = Math.sqrt((this.cubicBezier[2] - mouseLeft)**2 + (this.cubicBezier[3]- mouseTop)**2)
       this.aimStartPoint = startPointDistance < endPointDistance
+      this.runDemoAnime = false
     },
+
+    endMove(){
+      this.mouseDown = false
+      this.startDemoAnime()
+    },
+
     startDemoAnime(){
-      const canvas = this.$refs["demoCanvas"]
-      const ctx = canvas.getContext("2d")
-      const moveWidth = canvas.width - 30
-      ctx.fillStyle = "#7C46A320"
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      let t = 0
-      while (t<1){
-        const y = this.returnYpos(t)
-        ctx.beginPath()
-        ctx.arc(10+y*moveWidth, 10, 10, 0, Math.PI*2, false);
-        ctx.fill()
-        t += 0.05
+      console.log("aaa");
+      if(this.changed){
+        this.runDemoAnime = true
+        this.changed = false
       }
-    },
-
-    returnYpos(x){
-      const y2 = this.cubicBezier[1]
-      const y3 = this.cubicBezier[3]
-      const t = this.getTimeFromX(x)
-      return (1-t)**3*0 + 3*(1-t)**2*t*y2 + 3*(1-t)*t**2*y3 + t**3*1
-    },
-
-    getTimeFromX(x){
-      if(x <= 0){return 0}
-      if(x >= 1){return 1}
-      let oldT
-      let t = x
-      while(Math.abs(t - oldT) > 1e-4){
-        oldT = t
-        t = t - ((this.besierX(t) - x) / this.bezierDX(t))
-      }
-      return t
-    },
-
-    bezierX(t){
-      const bx = 3 * this.cubicBezier[0]
-      const ax = 1 - bx
-      return t * (t * (bx + t * ax));
-    },
-
-    bezierDX(t){
-      const bx = 3 * this.cubicBezier[0]
-      const ax = 1 - bx
-      return t * (2 * bx + 3 * ax * t);
     }
   },
   watch: {
@@ -171,7 +152,7 @@ export default {
         })
         newCubicBezier += ")"
         this.$emit("update:modelValue", newCubicBezier)
-        this.startDemoAnime()
+        this.changed = true
       }
     }
   }
@@ -185,8 +166,13 @@ export default {
   margin: 0 !important;
 }
 
+#cubicInputs {
+  font-size: 12px;
+  text-align: center;
+}
+
 #cubicInput input {
-  width: 33px;
+  width: 20px;
 }
 
 #cubicInput:last-child span {
@@ -196,10 +182,10 @@ export default {
 #mainDiv {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 40px;
   box-shadow: 0 1px 4px 0.5px rgba(0, 0, 0, .2);
-  width: 280.5px;
-  padding: 15px;
+  width: 275px;
+  padding: 10px;
   border-radius: 6px;
 }
 
@@ -216,9 +202,25 @@ export default {
   flex-direction: column;
 }
 
+
 .buttonBezier {
   background-color:#f5f5f5;
   padding: 6px;
   margin: 0 0 0 0;
+}
+</style>
+
+<style scoped>
+#demoAnimeBall {
+  height: 20px;
+  width: 20px;
+  margin-top: -20px;
+  background: #9C26B0;
+  border-radius: 50%;
+}
+
+.runDemoAnime {
+  transition: all 1.0s v-bind(modelValue);
+  margin-left: 230px;
 }
 </style>
