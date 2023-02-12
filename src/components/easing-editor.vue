@@ -1,8 +1,9 @@
 <template>
   <div id="mainDiv">
-    <div>
-      <canvas width="250.5" height="20" ref="demoCanvas"/>
-      <div id="demoAnimeBall" :class="{'runDemoAnime':runDemoAnime}"/>
+    <button @click="resetDemoAnime">a</button>
+    <div id="demoAnime">
+      <canvas width="235" height="20" ref="demoCanvas"/>
+      <div id="demoAnimeBall" ref="demoAnimeBall" :class="{'runDemoAnime':runDemoAnime}"/>
     </div>
     <div id="cubicEditor">
       <div>
@@ -28,7 +29,7 @@
         </button>
       </div>
       <svg
-        :width="inputSize" :height="inputSize" :viewBox="`${(100-svgSize)/2} ${(100-svgSize)/2} ${svgSize} ${svgSize}`" xmlns="http://www.w3.org/2000/svg" ref="mainView"
+        :width="inputWidth" :height="inputHeight" :viewBox="`-7 -7 ${20000/inputWidth-7} ${20000/inputHeight-7}`" xmlns="http://www.w3.org/2000/svg" ref="mainView"
         @mousedown="startMove"
       >
         <path :d="`M 0 100 L ${cubicBezier[0]*100} ${(1-cubicBezier[1])*100}`" stroke="#C587D1" stroke-width="1.5"/>
@@ -57,6 +58,8 @@ export default {
   data(){return {
     cubicBezier: [0.4, 0.1, 0.4, 0.8],
     inputSize: 165,
+    inputWidth: 165,
+    inputHeight: 180,
     svgSize: 140,
     mouseDown: false,
     aimStartPoint: true,
@@ -65,7 +68,8 @@ export default {
       [0.4, 0, 1, 1],
       [0, 0, 0.6, 1]
     ],
-    runDemoAnime: false
+    runDemoAnime: false,
+    animationTime: "1000ms"
   }},
   mounted(){
     let newCubicBezier = this.modelValue.replace("cubic-bezier(", "").replace(")", "").split(", ")
@@ -75,6 +79,9 @@ export default {
       i++
     })
     this.cubicBezier = newCubicBezier
+
+    this.demoAnimeCanvas = this.$refs["demoCanvas"]
+    this.animeCTX = this.demoAnimeCanvas.getContext("2d")
 
     addEventListener("mousemove", this.movePoint)
     addEventListener("mouseup", this.endMove)
@@ -121,10 +128,26 @@ export default {
 
     startDemoAnime(){
       this.runDemoAnime = true
+      const ball = this.$refs["demoAnimeBall"]
+      const canvasLeft = this.demoAnimeCanvas.getBoundingClientRect().left
+      let time = 0
+      const drawFPS = parseInt(this.animationTime, 10)/20
+      this.animeCTX.fillStyle = "#9b26b00A"
+      const drawBall = setInterval(()=>{
+        const ballLeft = ball.getBoundingClientRect().left
+        const ballCanvasLeft = ballLeft - canvasLeft
+        console.log(ballCanvasLeft);
+        this.animeCTX.arc(ballCanvasLeft, 10, 10, 0, Math.PI * 2, true);
+        this.animeCTX.fill()
+
+        if(1 <= time){clearInterval(drawBall)}
+        time += drawFPS/1000
+      }, drawFPS)
     },
 
     resetDemoAnime(){
       this.runDemoAnime = false
+      this.animeCTX.clearRect(0, 0, this.demoAnimeCanvas.width, this.demoAnimeCanvas.height)
     },
 
     useTemplate(buttonBezier){
@@ -163,7 +186,7 @@ export default {
   gap: 40px;
   box-shadow: 0 1px 4px 0.5px rgba(0, 0, 0, .2);
   width: 275px;
-  padding: 10px;
+  padding: 20px;
   border-radius: 6px;
 }
 
@@ -186,19 +209,23 @@ export default {
   padding: 6px;
   margin: 0 0 0 0;
 }
-</style>
 
-<style scoped>
+#demoAnime {
+  position: relative;
+}
+
 #demoAnimeBall {
   height: 20px;
   width: 20px;
-  margin-top: -20px;
+  top: 0px;
+  left: 0px;
   background: #9C26B0;
   border-radius: 50%;
+  position: absolute;
 }
 
 .runDemoAnime {
-  transition: all 1.0s v-bind(modelValue);
-  margin-left: 230px;
+  transition: left v-bind(animationTime) v-bind(modelValue);
+  left: 215px !important;
 }
 </style>
